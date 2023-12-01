@@ -64,7 +64,7 @@ function pia_wireguard_authenticate() {
 		pia_wireguard_authentication_json=$(curl --silent --get --insecure --data-urlencode "pt=${token}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${VPN_REMOTE_SERVER}:1337/addKey")
 	else
 		random_string=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)
-		pia_wireguard_authentication_json=$(curl --silent --get --insecure --connect-to "${VPN_REMOTE_SERVER}::${DEDICATED_IP}:" -u "dedicated_ip_${DEDICATED_IP_TOKEN}_${random_string}:${DEDICATED_IP}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${VPN_REMOTE_SERVER}:1337/addKey")
+		pia_wireguard_authentication_json=$(curl --silent --get --insecure --connect-to "${DEDICATED_IP_CN}::${DEDICATED_IP}:" -u "dedicated_ip_${DEDICATED_IP_TOKEN}_${random_string}:${DEDICATED_IP}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${DEDICATED_IP_CN}:1337/addKey")
 	fi
 
 }
@@ -98,6 +98,17 @@ function pia_create_wireguard_config_file() {
 	# file lookup (hosts file entry created in start.sh)
 	#pia_wireguard_server_ip=$(getent hosts "${VPN_REMOTE_SERVER}" | awk '{ print $1 }')
 
+if [ -z "${DEDICATED_IP_TOKEN}" ]; then
+    # DEDICATED_IP_TOKEN is not set, so copy the values
+    export VPN_REMOTE_SERVER_NEW="${VPN_REMOTE_SERVER}"
+    export VPN_REMOTE_PORT_NEW="${VPN_REMOTE_PORT}"
+else
+    # DEDICATED_IP_TOKEN is set, so use the values from pia_wireguard_authentication_json
+    export VPN_REMOTE_SERVER_NEW=$(echo "${pia_wireguard_authentication_json}" | jq -r '.server_ip')
+    export VPN_REMOTE_PORT_NEW=$(echo "${pia_wireguard_authentication_json}" | jq -r '.server_port')
+fi
+
+
 cat <<EOF > "${VPN_CONFIG}"
 
 [Interface]
@@ -109,7 +120,7 @@ PostDown = '/root/wireguarddown.sh'
 [Peer]
 PublicKey = ${pia_wireguard_server_key}
 AllowedIPs = 0.0.0.0/0
-Endpoint = ${VPN_REMOTE_SERVER}:${VPN_REMOTE_PORT}
+Endpoint = ${VPN_REMOTE_SERVER_NEW}:${VPN_REMOTE_PORT_NEW}
 
 EOF
 
