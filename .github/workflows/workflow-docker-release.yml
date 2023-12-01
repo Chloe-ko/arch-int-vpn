@@ -2,7 +2,7 @@ name: workflow-docker-release
 
 on:
   push:
-    tags:
+    branch:
       - '*'
 
 jobs:
