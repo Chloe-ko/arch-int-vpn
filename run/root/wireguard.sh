@@ -60,7 +60,12 @@ function pia_wireguard_authenticate() {
 	# authenticate via the pia wireguard restful api
 	# this will return json with data required for authentication.
 	echo "[info] Trying to connect to the PIA WireGuard API on '${VPN_REMOTE_SERVER}'..."
-	pia_wireguard_authentication_json=$(curl --silent --get --insecure --data-urlencode "pt=${token}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${VPN_REMOTE_SERVER}:1337/addKey")
+	if [ -z "${DEDICATED_IP_TOKEN}" ]; then
+		pia_wireguard_authentication_json=$(curl --silent --get --insecure --data-urlencode "pt=${token}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${VPN_REMOTE_SERVER}:1337/addKey")
+	else
+		random_string=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)
+		pia_wireguard_authentication_json=$(curl --silent --get --insecure --connect-to "${VPN_REMOTE_SERVER}::${DEDICATED_IP}:" -u "dedicated_ip_${DEDICATED_IP_TOKEN}_${random_string}:${DEDICATED_IP}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${VPN_REMOTE_SERVER}:1337/addKey")
+	fi
 
 }
 
