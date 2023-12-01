@@ -64,7 +64,7 @@ function pia_wireguard_authenticate() {
 		pia_wireguard_authentication_json=$(curl --silent --get --insecure --data-urlencode "pt=${token}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${VPN_REMOTE_SERVER}:1337/addKey")
 	else
  		echo "[info] Generating random client ID.."
-		random_string=$(cat /dev/urandom | tr -dc '0-9' | fold -w 8 | head -n 1)
+		random_string=$(echo {a..z} {A..Z} {0..9} | tr ' ' '\n' | shuf | tr -d '\n' | head -c 8)
   		echo "[info] Fetching Wireguard data from PIA"
 		pia_wireguard_authentication_json=$(curl -s -G -k  --connect-to "${DEDICATED_IP_CN}::${DEDICATED_IP}:" -u "dedicated_ip_${DEDICATED_IP_TOKEN}_${random_string}:${DEDICATED_IP}" --data-urlencode "pubkey=${wireguard_public_key}" "https://${DEDICATED_IP_CN}:1337/addKey")
 	fi
