@@ -7,10 +7,6 @@ if [[ -z "${!application_incoming_port}" ]]; then
 	echo "[warn] ${APPLICATION} incoming port is not defined" ; return 3
 fi
 
-if [[ "${!application_incoming_port}" -eq 6881 ]]; then
-	echo "[info] ${APPLICATION} incoming port is still set to default - skipping this check as we are likely in init phase" ; return 0
-fi
-
 if [[ -z "${external_ip}" ]]; then
 	echo "[warn] External IP address is not defined" ; return 4
 fi
